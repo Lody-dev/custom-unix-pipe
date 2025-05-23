@@ -16,10 +16,17 @@ int access_check(int argc, char **argv)
 	}
 	return(printf("Files are accessible\n"), 0);
 }
-/*
-int env_check(char **envp)
+
+/*int find_path(char **envp)
 {
+	int i;
 	
+	i = -1;
+	while (envp[++i])
+	{
+		ft_strcmp(envp[i], "PATH=")
+	}
+	return (i);
 }*/
 
 int main(int argc, char **argv, char **envp)
@@ -28,5 +35,6 @@ int main(int argc, char **argv, char **envp)
 		printf("Usage: ./pipex file1 cmd1 cmd2 file2");	
 	if (access_check(argc, argv) == -1)
 		printf("Access: KO!\n");
+	(void)envp;
 	return (0);
 }
