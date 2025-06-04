@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include "../lib/libft/libft.h"
 #include <stdio.h>
 #include <unistd.h>
 
@@ -17,24 +18,33 @@ int access_check(int argc, char **argv)
 	return(printf("Files are accessible\n"), 0);
 }
 
-/*int find_path(char **envp)
+char** find_path(char **envp)
 {
 	int i;
 	
-	i = -1;
-	while (envp[++i])
+	i = 0;
+	while (envp[i] != NULL)
 	{
-		ft_strcmp(envp[i], "PATH=")
-	}
-	return (i);
-}*/
+		if (ft_strncmp(envp[i], "PATH=/", 6) == 0)
+			return(ft_split(&envp[i][5], ':'));
+		i++;
+	}		
+	ft_printf("Error: corrupted env variable\n");
+	exit(0);
+}
 
 int main(int argc, char **argv, char **envp)
 {
+	char** PATH;
+	
 	if (argc < 5)
-		printf("Usage: ./pipex file1 cmd1 cmd2 file2");	
+	{
+		ft_printf("Usage: ./pipex file1 cmd1 cmd2 file2\n");	
+		return(1);
+	}
 	if (access_check(argc, argv) == -1)
 		printf("Access: KO!\n");
-	(void)envp;
+	PATH = find_path(envp);
+	(void)PATH;
 	return (0);
 }
