@@ -6,12 +6,19 @@
 /*   By: viaremko <lodyiaremko@proton.me>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/09 16:09:24 by viaremko          #+#    #+#             */
-/*   Updated: 2025/05/02 16:00:04 by viaremko         ###   ########.fr       */
+/*   Updated: 2025/06/04 19:17:08 by viaremko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef LIBFT_H
 # define LIBFT_H
+
+# include <fcntl.h>
+# include <stdarg.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+# include <unistd.h>
 
 # ifndef BUFFER_SIZE
 #  define BUFFER_SIZE 10
@@ -20,13 +27,6 @@
 # ifndef MAX_FD
 #  define MAX_FD __FD_SETSIZE
 # endif
-
-# include <fcntl.h>
-# include <stdarg.h>
-# include <stdio.h>
-# include <stdlib.h>
-# include <string.h>
-# include <unistd.h>
 
 int		ft_isalnum(int c);
 int		ft_isalpha(int c);

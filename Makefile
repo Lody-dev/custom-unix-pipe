@@ -1,9 +1,9 @@
 NAME    := pipex
-CFLAGS  := -Wall -Wextra -Werror
+CFLAGS  := -Wall -Wextra -Werror -g
 LIBFT   := ./lib/libft
 
 HEADERS := -I $(LIBFT)
-LIBS    := $(LIBFT)/libft.a -ldl -lglfw -pthread -lm
+LIBS    := $(LIBFT)/libft.a 
 
 SRCS    := $(shell find ./src -name "*.c")
 OBJS    := $(SRCS:.c=.o)
@@ -19,11 +19,11 @@ libft:
 
 %.o: %.c
 	@echo "⚙️ Compiling: $<"
-	@gcc $(CFLAGS) -c $< -o $@ $(HEADERS)
+	@cc $(CFLAGS) -c $< -o $@ $(HEADERS)
 
 $(NAME): $(OBJS)
 	@echo "🔗 Linking: $(NAME)"
-	@gcc $(OBJS) $(LIBS) -o $(NAME) $(HEADERS)
+	@cc $(OBJS) $(LIBS) -o $(NAME) $(HEADERS)
 	@echo "✅ Executable created: $(NAME)"
 
 clean:
