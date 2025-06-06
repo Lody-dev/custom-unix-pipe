@@ -24,26 +24,21 @@ void command_access_check(char **paths, char **commands)
 	int i;
 	int j;
 
-	j = 0;
-	while(paths[j] != NULL)
+	j = -1;
+	while(paths[++j] != NULL)
 	{
-		i = 0;
-		while(commands[i] != NULL)
+		i = -1;
+		while(commands[++i] != NULL)
 		{
 			path = ft_strjoin(paths[j], commands[i]);
 			if(access(path, X_OK) != 0)
-			{
-				ft_printf("Path not found in case of %s%s\n", paths[j], commands[i]);
 				free(path);
-			}
 			else
 			{
 				ft_printf("\nPath found for %s%s\n\n", paths[j], commands[i]);
 				free(path);
 			}
-			i++;
 		}
-		j++;
 	}
 }
 
