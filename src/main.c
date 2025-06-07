@@ -18,31 +18,7 @@ int file_access_check(int argc, char **argv)
 	return(printf("Files are accessible\n"), 0);
 }
 
-void command_access_check(char **paths, char **commands)
-{
-	char *path;
-	int i;
-	int j;
-
-	j = -1;
-	while(paths[++j] != NULL)
-	{
-		i = -1;
-		while(commands[++i] != NULL)
-		{
-			path = ft_strjoin(paths[j], commands[i]);
-			if(access(path, X_OK) != 0)
-				free(path);
-			else
-			{
-				ft_printf("\nPath found for %s%s\n\n", paths[j], commands[i]);
-				free(path);
-			}
-		}
-	}
-}
-
-char** find_path(char **envp)
+char** find_candidate(char **envp)
 {
 	int i;
 	
@@ -68,11 +44,10 @@ char** create_commands_array(char **argv, int argc)
 	i = 0;
 	while(i + 2 != argc-1)
 	{
-		ft_printf("\nString: %s\n\n", argv[i + 2]);
 		tmp_commands[i] = strdup(argv[i + 2]); 
-		ft_printf("Command: %s\n", tmp_commands[i]);
 		i++;
 	}
+	i--;
 	while(i != -1)
 	{
 		commands[i] = ft_strjoin("/", tmp_commands[i]);
@@ -82,19 +57,61 @@ char** create_commands_array(char **argv, int argc)
 	free(tmp_commands);
 	return(commands);
 }
+
+char* find_path(char **candidates, char *command)
+{
+	char *path;
+	int i;
+
+	i = 0;
+	while(candidates[i] != NULL)
+	{
+		path = ft_strjoin(candidates[i], command);
+		if(access(path, X_OK) == 0)
+			return(path);
+		free(path);
+		i++;
+	}
+	return(NULL);
+}
+
+char** get_paths_array(char **candidates, char **commands, int argc)
+{
+	int i;
+	char **paths;
 	
+	paths = malloc((argc - 3) * sizeof(char*)); //DO NOT FORGET TO FREEEEEEEEE!!!!!!!!!!!!!!!11!!!!
+	i = 0;
+	while(i < argc-3)
+	{
+		paths[i] = find_path(candidates, commands[i]);
+		i++;
+	}
+	return(paths);
+}
+
 int main(int argc, char **argv, char **envp)
 {
-	char** PATH;
-	char** COMMANDS;	
+	char** candidates;
+	char** commands;	
+	char** paths;
 	if (argc < 5)
 	{
 		ft_printf("Usage: ./pipex file1 cmd1 cmd2 file2\n");	
 		return(1);
-	}	if (file_access_check(argc, argv) == -1)
+	}
+	if (file_access_check(argc, argv) == -1)
 		printf("Access: KO!\n");
-	PATH = find_path(envp);                        // <-- FREE ME PLEASE, I'M BEGGING YOU
-	COMMANDS = create_commands_array(argv, argc);  // <-- FREE ME AS WELL
-	command_access_check(PATH,COMMANDS);
+	candidates = find_candidate(envp);			// <-- FREE ME PLEASE, I'M BEGGING YOU
+	commands = create_commands_array(argv, argc);		// <-- FREE ME AS WELL
+	paths = get_paths_array(candidates, commands, argc);
+	//command_access_check(candidates,commands);
+	
+	int i = 0;
+	while(i < argc-3)
+	{
+		ft_printf("Path: %s\n", paths[i]);
+		i++;
+	}
 	return (0);
 }
