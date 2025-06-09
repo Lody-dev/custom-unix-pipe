@@ -2,20 +2,28 @@
 #include "../lib/libft/libft.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+void ft_error(int exit_code, char *msg)
+{
+	ft_putstr_fd(msg, 2);
+	exit(exit_code);
+}
 
 int file_access_check(int argc, char **argv)
 {
 	if (access(argv[1], R_OK) != 0)
-		return (printf("Can't access %s\n", argv[1]),-1);
+		return (-1);
 	if (access(argv[argc - 1], W_OK) == -1)
 	{
 		open(argv[argc - 1], O_WRONLY | O_CREAT, 0644);
 		if (access(argv[argc - 1], F_OK) == -1)
-			return (printf("Can't create %s\n", argv[argc-1]), -1);
+			return (-1);
 		if (access(argv[argc - 1], W_OK) == -1)
-			return (printf("Can't write on %s file\n", argv[argc-1]), -1);
+			return (-1);
 	}
-	return(printf("Files are accessible\n"), 0);
+	return (0);
 }
 
 char** find_candidate(char **envp)
@@ -29,8 +37,8 @@ char** find_candidate(char **envp)
 			return(ft_split(&envp[i][5], ':'));
 		i++;
 	}		
-	ft_printf("Error: corrupted env variable\n");
-	exit(0);
+	ft_error(3, "Error: corrupted env variable\n");
+	return(NULL);
 }
 
 char** create_commands_array(char **argv, int argc)
@@ -38,7 +46,6 @@ char** create_commands_array(char **argv, int argc)
 	int i;
 	char **tmp_commands;
 	char **commands;
-	ft_printf("\nArgc: %d\n",argc);
 	tmp_commands = malloc((argc - 3) * sizeof(char*)); //argc - 3 because in "./pipex in cmd cmd out" argc = 5 y cantidad de cmd = 2
 	commands = malloc((argc - 3) * sizeof(char*));
 	i = 0;
@@ -90,28 +97,47 @@ char** get_paths_array(char **candidates, char **commands, int argc)
 	return(paths);
 }
 
+void path_check(char **paths, char **commands, int argc)
+{
+	int i;
+	int null_counter;
+
+	i = 0;
+	null_counter = 0;
+	while(i < argc-3)
+	{
+		if(paths[i] == NULL)
+		{
+			ft_printf("Command %s not found\n", commands[i]);
+			null_counter++;
+		}
+		i++;
+	}
+	if (null_counter != 0)
+		ft_error(4, "Non existent command found\n");	
+}
+
 int main(int argc, char **argv, char **envp)
 {
 	char** candidates;
 	char** commands;	
 	char** paths;
+
 	if (argc < 5)
-	{
-		ft_printf("Usage: ./pipex file1 cmd1 cmd2 file2\n");	
-		return(1);
-	}
+		ft_error(1, "Not enough arguments\nUsage: ./pipex file1 cmd1 cmd2 file2");
 	if (file_access_check(argc, argv) == -1)
-		printf("Access: KO!\n");
+		ft_error(2, "Can't access file");
 	candidates = find_candidate(envp);			// <-- FREE ME PLEASE, I'M BEGGING YOU
 	commands = create_commands_array(argv, argc);		// <-- FREE ME AS WELL
-	paths = get_paths_array(candidates, commands, argc);
-	//command_access_check(candidates,commands);
-	
+	paths = get_paths_array(candidates, commands, argc);    // <-- ^^^^ ^^ ^^ ^^^^
+		
 	int i = 0;
 	while(i < argc-3)
 	{
 		ft_printf("Path: %s\n", paths[i]);
 		i++;
 	}
+	path_check(paths, commands, argc);
+	ft_printf("OK\n");
 	return (0);
 }
