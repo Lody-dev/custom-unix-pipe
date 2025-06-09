@@ -13,8 +13,6 @@ void ft_error(int exit_code, char *msg)
 
 int file_access_check(int argc, char **argv)
 {
-	if (access(argv[1], R_OK) != 0)
-		return (-1);
 	if (access(argv[argc - 1], W_OK) == -1)
 	{
 		open(argv[argc - 1], O_WRONLY | O_CREAT, 0644);
@@ -23,6 +21,8 @@ int file_access_check(int argc, char **argv)
 		if (access(argv[argc - 1], W_OK) == -1)
 			return (-1);
 	}
+	if (access(argv[1], R_OK) != 0)
+		return (-1);
 	return (0);
 }
 
@@ -97,7 +97,7 @@ char** get_paths_array(char **candidates, char **commands, int argc)
 	return(paths);
 }
 
-void path_check(char **paths, char **commands, int argc)
+void path_check(char **paths, int argc)
 {
 	int i;
 	int null_counter;
@@ -107,14 +107,11 @@ void path_check(char **paths, char **commands, int argc)
 	while(i < argc-3)
 	{
 		if(paths[i] == NULL)
-		{
-			ft_printf("Command %s not found\n", commands[i]);
 			null_counter++;
-		}
 		i++;
 	}
 	if (null_counter != 0)
-		ft_error(4, "Non existent command found\n");	
+		ft_error(4, "Error: command not found\n");	
 }
 
 int main(int argc, char **argv, char **envp)
@@ -124,9 +121,9 @@ int main(int argc, char **argv, char **envp)
 	char** paths;
 
 	if (argc < 5)
-		ft_error(1, "Not enough arguments\nUsage: ./pipex file1 cmd1 cmd2 file2");
+		ft_error(1, "Not enough arguments\nUsage: ./pipex file1 cmd1 cmd2 file2\n");
 	if (file_access_check(argc, argv) == -1)
-		ft_error(2, "Can't access file");
+		ft_error(2, "Can't access file\n");
 	candidates = find_candidate(envp);			// <-- FREE ME PLEASE, I'M BEGGING YOU
 	commands = create_commands_array(argv, argc);		// <-- FREE ME AS WELL
 	paths = get_paths_array(candidates, commands, argc);    // <-- ^^^^ ^^ ^^ ^^^^
@@ -137,7 +134,7 @@ int main(int argc, char **argv, char **envp)
 		ft_printf("Path: %s\n", paths[i]);
 		i++;
 	}
-	path_check(paths, commands, argc);
+	path_check(paths, argc);
 	ft_printf("OK\n");
 	return (0);
 }
