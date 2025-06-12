@@ -73,5 +73,6 @@ int		ft_puthex(unsigned int nb);
 int		ft_putbighex(unsigned int nb);
 int		ft_putptr(unsigned long ptr);
 int		ft_putunbr(unsigned int nb);
+char	*ft_tstrjoin(const char *s1, const char *s2, const char *s3);
 
 #endif

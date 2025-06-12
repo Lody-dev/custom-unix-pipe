@@ -49,24 +49,14 @@ char** find_candidate(char **envp)
 char** create_commands_array(char **argv, int argc)
 {
 	int i;
-	char **tmp_commands;
 	char **commands;
-	tmp_commands = malloc((argc - 3) * sizeof(char*)); //argc - 3 because in "./pipex in cmd cmd out" argc = 5 y cantidad de cmd = 2
 	commands = malloc((argc - 3) * sizeof(char*));
 	i = 0;
 	while(i + 2 != argc-1)
 	{
-		tmp_commands[i] = strdup(argv[i + 2]); 
+		commands[i] = strdup(argv[i + 2]); 
 		i++;
 	}
-	i--;
-	while(i != -1)
-	{
-		commands[i] = ft_strjoin("/", tmp_commands[i]);
-		free(tmp_commands[i]);
-		i--;
-	}
-	free(tmp_commands);
 	return(commands);
 }
 
@@ -78,7 +68,7 @@ char* find_path(char **candidates, char *command)
 	i = 0;
 	while(candidates[i] != NULL)
 	{
-		path = ft_strjoin(candidates[i], command);
+		path = ft_tstrjoin(candidates[i], "/", command);
 		if(access(path, X_OK) == 0)
 			return(path);
 		free(path);
