@@ -46,15 +46,16 @@ char** find_candidate(char **envp)
 	return(NULL);
 }
 
-char** create_commands_array(char **argv, int argc)
+char*** create_commands_array(char **argv, int argc)
 {
 	int i;
-	char **commands;
-	commands = malloc((argc - 3) * sizeof(char*));
+	char ***commands;
+	commands = malloc((argc - 3) * sizeof(char**));
 	i = 0;
+
 	while(i + 2 != argc-1)
 	{
-		commands[i] = strdup(argv[i + 2]); 
+		commands[i] = ft_split(argv[i + 2], ' '); 
 		i++;
 	}
 	return(commands);
@@ -77,7 +78,7 @@ char* find_path(char **candidates, char *command)
 	return(NULL);
 }
 
-char** get_paths_array(char **candidates, char **commands, int argc)
+char** get_paths_array(char **candidates, char ***commands, int argc)
 {
 	int i;
 	char **paths;
@@ -86,7 +87,7 @@ char** get_paths_array(char **candidates, char **commands, int argc)
 	i = 0;
 	while(i < argc-3)
 	{
-		paths[i] = find_path(candidates, commands[i]);
+		paths[i] = find_path(candidates, commands[i][0]);
 		i++;
 	}
 	return(paths);
@@ -106,13 +107,13 @@ void path_check(char **paths, int argc)
 		i++;
 	}
 	if (null_counter != 0)
-		ft_error(4, "Error: command not found\n");	
+		ft_error(4, "Error: command not found\n");
 }
 
 int main(int argc, char **argv, char **envp)
 {
 	char** candidates;
-	char** commands;	
+	char*** commands;
 	char** paths;
 
 	if (argc < 5)
@@ -130,6 +131,7 @@ int main(int argc, char **argv, char **envp)
 		i++;
 	}
 	path_check(paths, argc);
+
 	ft_printf("OK\n");
 	return (0);
 }
