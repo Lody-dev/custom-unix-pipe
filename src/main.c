@@ -13,6 +13,11 @@ void ft_error(int exit_code, char *msg)
 
 int file_access_check(int argc, char **argv)
 {
+	if (strcmp(argv[argc - 1], argv[1]) == 0 && access(argv[1], R_OK) != 0)
+	{
+		open(argv[argc - 1], O_WRONLY | O_CREAT, 0644);
+		return(-1);
+	}
 	if (access(argv[argc - 1], W_OK) == -1)
 	{
 		open(argv[argc - 1], O_WRONLY | O_CREAT, 0644);
