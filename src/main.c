@@ -111,24 +111,33 @@ void path_check(char **paths, int argc)
 		ft_error(4, "Error: command not found\n");
 }
 
-void start_pipex(char *path, char **command, char **envp, char **argv)
+void start_pipex(char *path, char **command, char **envp, char **argv, int count, int argc)
 {
 	pid_t pid;
 	int infile_fd;
+	int outfile_fd;
 
 	pid = fork();
 	if (pid == 0) //child
 	{
-		infile_fd = open(argv[1], O_RDONLY);
-		dup2(infile_fd, STDIN_FILENO);
-		close(infile_fd); //infile_fd is immedeately closed because its value now passed to STDIN of this process. So infile_fd can be closed.
+		if (count == 0)
+		{
+			infile_fd = open(argv[1], O_RDONLY);
+			dup2(infile_fd, STDIN_FILENO);
+			close(infile_fd); //infile_fd is immedeately closed because its value now passed to STDIN of this process. So infile_fd can be closed.
+		}
+		else if( count == argc - 4) //argc -4 is the last command
+		{
+			outfile_fd = open(argv[argc - 1],O_CREAT | O_WRONLY | O_TRUNC, 0644);
+			dup2(outfile_fd, STDOUT_FILENO);
+			close(outfile_fd);
+		}
 		execve(path,command,envp);
 		ft_error(127, "Child process falied");
 	}
 	else if (pid > 0) //parent 
 	{
 		waitpid(pid, NULL, 0);
-		ft_printf("I am parent process\n");
 	}
 	else if (pid < 0) //error
 		ft_error(1,"Child process falied\n");
@@ -158,7 +167,7 @@ int main(int argc, char **argv, char **envp)
 	i = 0;
 	while(i < argc - 3)
 	{
-		start_pipex(paths[i],commands[i], envp, argv);
+		start_pipex(paths[i],commands[i], envp, argv, i, argc);
 		i++;
 	}
 	ft_printf("OK\n");
