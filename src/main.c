@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <sys/wait.h>
 #include "../lib/libft/libft.h"
 #include <stdio.h>
 #include <unistd.h>
@@ -110,6 +111,30 @@ void path_check(char **paths, int argc)
 		ft_error(4, "Error: command not found\n");
 }
 
+void child_process(char *path, char **command, char **envp, char **argv)
+{
+	pid_t pid;
+	int infile_fd;
+
+	infile_fd = open(argv[1], O_RDONLY);
+	dup2(infile_fd, STDIN_FILENO);
+	close(infile_fd); //infile_fd is immedeately closed because its value now passed to STDIN of this process. So infile_fd can be closed.
+	
+	pid = fork();
+	if (pid == 0) //child
+	{
+		execve(path,command,envp);
+		ft_error(127, "Child process falied");
+	}
+	else if (pid > 0) //parent 
+	{
+		waitpid(pid, NULL, 0);
+		ft_printf("I am parent process\n");
+	}
+	else if (pid < 0) //error
+		ft_error(1,"Child process falied\n");
+}
+
 int main(int argc, char **argv, char **envp)
 {
 	char** candidates;
@@ -131,7 +156,7 @@ int main(int argc, char **argv, char **envp)
 		i++;
 	}
 	path_check(paths, argc);
-
+	child_process(paths[0],commands[0], envp, argv);
 	ft_printf("OK\n");
 	return (0);
 }
