@@ -83,7 +83,7 @@ char** get_paths_array(char **candidates, char ***commands, int argc)
 {
 	int i;
 	char **paths;
-	
+
 	paths = malloc((argc - 3) * sizeof(char*)); //DO NOT FORGET TO FREEEEEEEEE!!!!!!!!!!!!!!!11!!!!
 	i = 0;
 	while(i < argc-3)
@@ -111,18 +111,17 @@ void path_check(char **paths, int argc)
 		ft_error(4, "Error: command not found\n");
 }
 
-void child_process(char *path, char **command, char **envp, char **argv)
+void start_pipex(char *path, char **command, char **envp, char **argv)
 {
 	pid_t pid;
 	int infile_fd;
 
-	infile_fd = open(argv[1], O_RDONLY);
-	dup2(infile_fd, STDIN_FILENO);
-	close(infile_fd); //infile_fd is immedeately closed because its value now passed to STDIN of this process. So infile_fd can be closed.
-	
 	pid = fork();
 	if (pid == 0) //child
 	{
+		infile_fd = open(argv[1], O_RDONLY);
+		dup2(infile_fd, STDIN_FILENO);
+		close(infile_fd); //infile_fd is immedeately closed because its value now passed to STDIN of this process. So infile_fd can be closed.
 		execve(path,command,envp);
 		ft_error(127, "Child process falied");
 	}
@@ -156,7 +155,12 @@ int main(int argc, char **argv, char **envp)
 		i++;
 	}
 	path_check(paths, argc);
-	child_process(paths[0],commands[0], envp, argv);
+	i = 0;
+	while(i < argc - 3)
+	{
+		start_pipex(paths[i],commands[i], envp, argv);
+		i++;
+	}
 	ft_printf("OK\n");
 	return (0);
 }
