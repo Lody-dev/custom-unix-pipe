@@ -1,10 +1,4 @@
-#include <fcntl.h>
-#include <sys/wait.h>
-#include "../lib/libft/libft.h"
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
+#include "../lib/pipex.h"
 
 void ft_error(int exit_code, char *msg)
 {
@@ -12,24 +6,25 @@ void ft_error(int exit_code, char *msg)
 	exit(exit_code);
 }
 
-int file_access_check(int argc, char **argv)
+void open_IO_files(int *infile_fd, int *outfile_fd, int argc, char **argv)
 {
-	if (strcmp(argv[argc - 1], argv[1]) == 0 && access(argv[1], R_OK) != 0)
+	int infile;
+	int outfile;
+
+	infile = 1;
+	outfile = argc-1;
+	
+	*outfile_fd = open(argv[outfile],O_CREAT | O_WRONLY | O_TRUNC, 0644);
+	if(*outfile_fd < 0)
 	{
-		open(argv[argc - 1], O_WRONLY | O_CREAT, 0644);
-		return(-1);
+		ft_error(1,"Can't create/open outfile\n");
 	}
-	if (access(argv[argc - 1], W_OK) == -1)
+	*infile_fd = open(argv[infile], O_RDONLY);
+	if(*infile_fd < 0)
 	{
-		open(argv[argc - 1], O_WRONLY | O_CREAT, 0644);
-		if (access(argv[argc - 1], F_OK) == -1)
-			return (-1);
-		if (access(argv[argc - 1], W_OK) == -1)
-			return (-1);
+		close(*outfile_fd);
+		ft_error(1,"Can't open infile\n");
 	}
-	if (access(argv[1], R_OK) != 0)
-		return (-1);
-	return (0);
 }
 
 char** find_candidate(char **envp)
@@ -111,64 +106,55 @@ void path_check(char **paths, int argc)
 		ft_error(4, "Error: command not found\n");
 }
 
-void start_pipex(char *path, char **command, char **envp, char **argv, int count, int argc)
+pid_t start_pipex(t_pipex *px, int argc)
 {
 	pid_t pid;
-	int infile_fd;
-	int outfile_fd;
-
+	
 	pid = fork();
 	if (pid == 0) //child
 	{
-		if (count == 0)
+		if (px->cmd_index == 0) //first command
 		{
-			infile_fd = open(argv[1], O_RDONLY);
-			dup2(infile_fd, STDIN_FILENO);
-			close(infile_fd); //infile_fd is immedeately closed because its value now passed to STDIN of this process. So infile_fd can be closed.
+			dup2(px->infile_fd, STDIN_FILENO);
+			close(px->infile_fd);
 		}
-		else if( count == argc - 4) //argc -4 is the last command
+		else if( px->cmd_index == argc - 4) //argc -4 is the last command
 		{
-			outfile_fd = open(argv[argc - 1],O_CREAT | O_WRONLY | O_TRUNC, 0644);
-			dup2(outfile_fd, STDOUT_FILENO);
-			close(outfile_fd);
+			dup2(px->outfile_fd, STDOUT_FILENO);
+			close(px->outfile_fd);
 		}
-		execve(path,command,envp);
+		execve(px->paths[px->cmd_index],px->commands[px->cmd_index],px->envp);
 		ft_error(127, "Child process falied");
-	}
-	else if (pid > 0) //parent 
-	{
-		waitpid(pid, NULL, 0);
 	}
 	else if (pid < 0) //error
 		ft_error(1,"Child process falied\n");
+	if (pid > 0) //parent 
+		waitpid(pid, NULL, 0);
+	return(pid);
 }
 
 int main(int argc, char **argv, char **envp)
 {
+	static t_pipex	px;
 	char** candidates;
-	char*** commands;
-	char** paths;
 
 	if (argc < 5)
 		ft_error(1, "Not enough arguments\nUsage: ./pipex file1 cmd1 cmd2 file2\n");
-	if (file_access_check(argc, argv) == -1)
-		ft_error(2, "Can't access file\n");
+	open_IO_files(&px.infile_fd, &px.outfile_fd, argc, argv);
+
 	candidates = find_candidate(envp);			// <-- FREE ME PLEASE, I'M BEGGING YOU
-	commands = create_commands_array(argv, argc);		// <-- FREE ME AS WELL
-	paths = get_paths_array(candidates, commands, argc);    // <-- ^^^^ ^^ ^^ ^^^^
-		
-	int i = 0;
-	while(i < argc-3)
+	px.commands = create_commands_array(argv, argc);		// <-- FREE ME AS WELL
+	px.paths = get_paths_array(candidates, px.commands, argc);    // <-- ^^^^ ^^ ^^ ^^^^
+	path_check(px.paths, argc);
+	
+	px.cmd_index = 0;
+	px.total_cmds = argc - 3;
+	px.envp = envp;
+	//open_pipes(px.pipes);
+	while(px.cmd_index < px.total_cmds)
 	{
-		ft_printf("Path: %s\n", paths[i]);
-		i++;
-	}
-	path_check(paths, argc);
-	i = 0;
-	while(i < argc - 3)
-	{
-		start_pipex(paths[i],commands[i], envp, argv, i, argc);
-		i++;
+		start_pipex(&px, argc);
+		px.cmd_index++;
 	}
 	ft_printf("OK\n");
 	return (0);
