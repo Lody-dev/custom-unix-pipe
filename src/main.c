@@ -65,6 +65,9 @@ char* find_path(char **candidates, char *command)
 	i = 0;
 	while(candidates[i] != NULL)
 	{
+	//	if(ft_strchr(command,'/') != NULL && access(command, X_OK) == 0)
+		if(access(command, X_OK) == 0)
+			return(command);
 		path = ft_tstrjoin(candidates[i], "/", command);
 		if(access(path, X_OK) == 0)
 			return(path);
