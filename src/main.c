@@ -106,30 +106,64 @@ void path_check(char **paths, int argc)
 		ft_error(4, "Error: command not found\n");
 }
 
+void open_pipes(int ***pipes,int argc)  //one more malloc happend here. TODO FREE();
+{
+	int pipe_index;
+	int total_pipes;		
+
+	pipe_index = 0;
+	total_pipes = argc - 3;
+	*pipes = malloc(total_pipes * sizeof(int*));
+	if(!*pipes)
+		ft_error(100,"Pipe malloc falied\n");
+	while(pipe_index < total_pipes)
+	{
+		(*pipes)[pipe_index] = malloc(2 * sizeof(int));
+		if(!(*pipes)[pipe_index] || pipe((*pipes)[pipe_index]) == -1)
+			{
+				while(pipe_index > 0)
+				{
+					pipe_index--;
+					free((*pipes)[pipe_index]);
+				}
+				free(*pipes);
+				ft_error(100, "Pipe malloc falied\n");
+			}
+		pipe_index++;
+	}	
+}
+
 pid_t start_pipex(t_pipex *px, int argc)
 {
 	pid_t pid;
-	
+		
 	pid = fork();
 	if (pid == 0) //child
 	{
 		if (px->cmd_index == 0) //first command
-		{
 			dup2(px->infile_fd, STDIN_FILENO);
-			close(px->infile_fd);
-		}
-		else if( px->cmd_index == argc - 4) //argc -4 is the last command
-		{
+		else
+			dup2(px->prev_read_fd, STDIN_FILENO);
+
+		if( px->cmd_index == argc - 4) //argc -4 is the last command
 			dup2(px->outfile_fd, STDOUT_FILENO);
-			close(px->outfile_fd);
-		}
+		else
+			dup2(px->pipes[px->cmd_index][1], STDOUT_FILENO);
+
 		execve(px->paths[px->cmd_index],px->commands[px->cmd_index],px->envp);
+		//free everything in child
 		ft_error(127, "Child process falied");
 	}
-	else if (pid < 0) //error
-		ft_error(1,"Child process falied\n");
-	if (pid > 0) //parent 
+	else if (pid > 0) //parent 
+	{
+		close(px->pipes[px->cmd_index][1]);
+		close(px->prev_read_fd);
+		px->prev_read_fd = px->pipes[px->cmd_index][0];
+
 		waitpid(pid, NULL, 0);
+	}
+	else //error
+		ft_error(1,"Child process falied\n");
 	return(pid);
 }
 
@@ -150,7 +184,7 @@ int main(int argc, char **argv, char **envp)
 	px.cmd_index = 0;
 	px.total_cmds = argc - 3;
 	px.envp = envp;
-	//open_pipes(px.pipes);
+	open_pipes(&px.pipes, argc);
 	while(px.cmd_index < px.total_cmds)
 	{
 		start_pipex(&px, argc);
