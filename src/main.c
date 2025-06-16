@@ -34,6 +34,24 @@ void ft_error(int exit_code, char *msg)
 	exit(exit_code);
 }
 
+void null_command_check(int argc, char **argv)
+{
+	int i;
+	char *trimmed_str;	
+	i = 2;
+	while(i != argc-1)
+	{
+		trimmed_str = ft_strtrim(argv[i]," 	\n");
+		if(ft_strncmp(trimmed_str,"",1) == 0)
+		{
+			free(trimmed_str);
+			ft_error(888, "Null argument found\n");
+		}
+		free(trimmed_str);
+		i++;
+	}
+}
+
 void open_IO_files(int *infile_fd, int *outfile_fd, int argc, char **argv)
 {
 	int infile;
@@ -94,9 +112,8 @@ char* find_path(char **candidates, char *command)
 	i = 0;
 	while(candidates[i] != NULL )
 	{
-	//	if(ft_strchr(command,'/') != NULL && access(command, X_OK) == 0)
 		if(access(command, X_OK) == 0)
-			return(command);
+			return(ft_strdup(command));
 		path = ft_tstrjoin(candidates[i], "/", command);
 		if(access(path, X_OK) == 0)
 			return(path);
@@ -121,7 +138,7 @@ char** get_paths_array(char **candidates, char ***commands, int argc)
 	return(paths);
 }
 
-void path_check(t_pipex *px,char **paths, int argc)
+void path_check(t_pipex *px, int argc)
 {
 	int i;
 	int null_counter;
@@ -130,7 +147,7 @@ void path_check(t_pipex *px,char **paths, int argc)
 	null_counter = 0;
 	while(i < argc-3)
 	{
-		if(paths[i] == NULL)
+		if(px->paths[i] == NULL)
 			null_counter++;
 		i++;
 	}
@@ -141,7 +158,7 @@ void path_check(t_pipex *px,char **paths, int argc)
 	}
 }
 
-void open_pipes(int ***pipes,int argc)  //one more malloc happend here. TODO FREE();
+void open_pipes(int ***pipes,int argc)
 {
 	int pipe_index;
 	int total_pipes;		
@@ -187,7 +204,7 @@ pid_t start_pipex(t_pipex *px, int argc)
 
 		execve(px->paths[px->cmd_index],px->commands[px->cmd_index],px->envp);
 		cleanup(px);
-		ft_error(127, "Child process falied");
+		ft_error(127, "Child process falied\n");
 	}
 	else if (pid > 0) //parent 
 	{
@@ -197,8 +214,6 @@ pid_t start_pipex(t_pipex *px, int argc)
 
 		waitpid(pid, NULL, 0);
 	}
-	else //error
-		ft_error(1,"Child process falied\n");
 	return(pid);
 }
 
@@ -209,13 +224,14 @@ int main(int argc, char **argv, char **envp)
 
 	if (argc < 5)
 		ft_error(1, "Not enough arguments\nUsage: ./pipex file1 cmd1 cmd2 file2\n");
+	null_command_check(argc, argv);
 	open_IO_files(&px.infile_fd, &px.outfile_fd, argc, argv);
 
 	open_pipes(&px.pipes, argc);
 	px.candidates = find_candidate(envp);
 	px.commands = create_commands_array(argv, argc);
 	px.paths = get_paths_array(px.candidates, px.commands, argc);
-	path_check(&px, px.paths, argc);
+	path_check(&px, argc);
 	
 	px.cmd_index = 0;
 	px.total_cmds = argc - 3;
