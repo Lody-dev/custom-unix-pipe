@@ -10,6 +10,7 @@
 typedef struct s_pipex
 {
     int	    prev_read_fd;
+    char**  candidates;
     char    **paths;        // Executable full paths for each cmd
     char    ***commands;    // Arguments for each command
     char    **envp;         // Environment variables
