@@ -204,7 +204,7 @@ pid_t start_pipex(t_pipex *px, int argc)
 
 		execve(px->paths[px->cmd_index],px->commands[px->cmd_index],px->envp);
 		cleanup(px);
-		ft_error(127, "Child process falied\n");
+		ft_error(126, "Child process falied\n");
 	}
 	else if (pid > 0) //parent 
 	{
@@ -225,23 +225,21 @@ int main(int argc, char **argv, char **envp)
 	if (argc < 5)
 		ft_error(1, "Not enough arguments\nUsage: ./pipex file1 cmd1 cmd2 file2\n");
 	null_command_check(argc, argv);
-	open_IO_files(&px.infile_fd, &px.outfile_fd, argc, argv);
-
-	open_pipes(&px.pipes, argc);
 	px.candidates = find_candidate(envp);
+	open_IO_files(&px.infile_fd, &px.outfile_fd, argc, argv);
+	open_pipes(&px.pipes, argc);
 	px.commands = create_commands_array(argv, argc);
 	px.paths = get_paths_array(px.candidates, px.commands, argc);
 	path_check(&px, argc);
-	
+	px.envp = envp;	
 	px.cmd_index = 0;
 	px.total_cmds = argc - 3;
-	px.envp = envp;
 	while(px.cmd_index < px.total_cmds)
 	{
 		start_pipex(&px, argc);
 		px.cmd_index++;
 	}
 	cleanup(&px);
-	ft_printf("OK\n");
+	ft_printf("Parent process finished\n");
 	return (0);
 }

@@ -13,7 +13,7 @@ typedef struct s_pipex
     char**  candidates;
     char    **paths;        // Executable full paths for each cmd
     char    ***commands;    // Arguments for each command
-    char    **envp;         // Environment variables
+    char    **envp;
     int     infile_fd;
     int     outfile_fd;
     int     **pipes;
