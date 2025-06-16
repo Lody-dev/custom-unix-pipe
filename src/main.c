@@ -46,7 +46,7 @@ char*** create_commands_array(char **argv, int argc)
 {
 	int i;
 	char ***commands;
-	commands = malloc((argc - 3) * sizeof(char**));
+	commands = ft_calloc((argc - 2) * sizeof(char**));
 	i = 0;
 
 	while(i + 2 != argc-1)
@@ -54,6 +54,7 @@ char*** create_commands_array(char **argv, int argc)
 		commands[i] = ft_split(argv[i + 2], ' '); 
 		i++;
 	}
+	commands[i] = NULL;
 	return(commands);
 }
 
@@ -82,7 +83,7 @@ char** get_paths_array(char **candidates, char ***commands, int argc)
 	int i;
 	char **paths;
 
-	paths = malloc((argc - 3) * sizeof(char*)); //DO NOT FORGET TO FREEEEEEEEE!!!!!!!!!!!!!!!11!!!!
+	paths = ft_calloc((argc - 3) * sizeof(char*)); //DO NOT FORGET TO FREEEEEEEEE!!!!!!!!!!!!!!!11!!!!
 	i = 0;
 	while(i < argc-3)
 	{
@@ -116,12 +117,12 @@ void open_pipes(int ***pipes,int argc)  //one more malloc happend here. TODO FRE
 
 	pipe_index = 0;
 	total_pipes = argc - 3;
-	*pipes = malloc(total_pipes * sizeof(int*));
+	*pipes = ft_calloc(total_pipes * sizeof(int*));
 	if(!*pipes)
 		ft_error(100,"Pipe malloc falied\n");
 	while(pipe_index < total_pipes)
 	{
-		(*pipes)[pipe_index] = malloc(2 * sizeof(int));
+		(*pipes)[pipe_index] = ft_calloc(2 * sizeof(int));
 		if(!(*pipes)[pipe_index] || pipe((*pipes)[pipe_index]) == -1)
 			{
 				while(pipe_index > 0)
@@ -170,6 +171,34 @@ pid_t start_pipex(t_pipex *px, int argc)
 	return(pid);
 }
 
+void cleanup(t_pipex *px, char **candidates)
+{
+	int i;
+	int j;
+	
+	i = 0;
+	while(px->commands[i] != NULL)
+	{
+		j = 0;
+		while(px->commands[i][j] != NULL)
+		{
+			free(px->commands[i][j]);
+			j++;
+		}
+		free(px->pipes[i]);
+		free(px->paths[i]);
+		free(px->commands[i]);
+		i++;
+	}
+	i=-1;
+	while(candidates[++i])
+		free(candidates[i]);
+	free(candidates);
+	free(px->pipes);
+	free(px->paths);
+	free(px->commands);
+}
+
 int main(int argc, char **argv, char **envp)
 {
 	static t_pipex	px;
@@ -179,9 +208,9 @@ int main(int argc, char **argv, char **envp)
 		ft_error(1, "Not enough arguments\nUsage: ./pipex file1 cmd1 cmd2 file2\n");
 	open_IO_files(&px.infile_fd, &px.outfile_fd, argc, argv);
 
-	candidates = find_candidate(envp);			// <-- FREE ME PLEASE, I'M BEGGING YOU
-	px.commands = create_commands_array(argv, argc);		// <-- FREE ME AS WELL
-	px.paths = get_paths_array(candidates, px.commands, argc);    // <-- ^^^^ ^^ ^^ ^^^^
+	candidates = find_candidate(envp);
+	px.commands = create_commands_array(argv, argc);
+	px.paths = get_paths_array(candidates, px.commands, argc);
 	path_check(px.paths, argc);
 	
 	px.cmd_index = 0;
@@ -193,6 +222,7 @@ int main(int argc, char **argv, char **envp)
 		start_pipex(&px, argc);
 		px.cmd_index++;
 	}
+	cleanup(&px, candidates);
 	ft_printf("OK\n");
 	return (0);
 }
