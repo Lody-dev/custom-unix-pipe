@@ -184,6 +184,22 @@ void open_pipes(int ***pipes,int argc)
 		pipe_index++;
 	}	
 }
+void child_process(t_pipex *px, int argc)
+{
+	if (px->cmd_index == 0) //first command
+		dup2(px->infile_fd, STDIN_FILENO);
+	else
+		dup2(px->prev_read_fd, STDIN_FILENO);
+
+	if( px->cmd_index == argc - 4) //argc -4 is the last command
+		dup2(px->outfile_fd, STDOUT_FILENO);
+	else
+		dup2(px->pipes[px->cmd_index][1], STDOUT_FILENO);
+
+	execve(px->paths[px->cmd_index],px->commands[px->cmd_index],px->envp);
+	cleanup(px);
+	ft_error(126, "Child process falied\n");
+}
 
 pid_t start_pipex(t_pipex *px, int argc)
 {
@@ -191,27 +207,12 @@ pid_t start_pipex(t_pipex *px, int argc)
 		
 	pid = fork();
 	if (pid == 0) //child
-	{
-		if (px->cmd_index == 0) //first command
-			dup2(px->infile_fd, STDIN_FILENO);
-		else
-			dup2(px->prev_read_fd, STDIN_FILENO);
-
-		if( px->cmd_index == argc - 4) //argc -4 is the last command
-			dup2(px->outfile_fd, STDOUT_FILENO);
-		else
-			dup2(px->pipes[px->cmd_index][1], STDOUT_FILENO);
-
-		execve(px->paths[px->cmd_index],px->commands[px->cmd_index],px->envp);
-		cleanup(px);
-		ft_error(126, "Child process falied\n");
-	}
+		child_process(px, argc);
 	else if (pid > 0) //parent 
 	{
 		close(px->pipes[px->cmd_index][1]);
 		close(px->prev_read_fd);
 		px->prev_read_fd = px->pipes[px->cmd_index][0];
-
 		waitpid(pid, NULL, 0);
 	}
 	return(pid);
