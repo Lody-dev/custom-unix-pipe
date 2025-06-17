@@ -9,16 +9,20 @@
 
 typedef struct s_pipex
 {
-    int	    prev_read_fd;
-    char**  candidates;
-    char    **paths;        // Executable full paths for each cmd
-    char    ***commands;    // Arguments for each command
-    char    **envp;
-    int     infile_fd;
-    int     outfile_fd;
-    int     **pipes;
-    int     cmd_index;      // Current command number in loop
-    int     total_cmds;     // Total number of commands
+	int	    prev_read_fd;
+	char**  candidates;
+	char    **paths;        // Executable full paths for each cmd
+	char    ***commands;    // Arguments for each command
+	char    **envp;
+	int     infile_fd;
+	int     outfile_fd;
+	int     **pipes;
+	int     cmd_index;      // Current command number in loop
+	int     total_cmds;     // Total number of commands
+	int     pipe_heredoc[2];
+	int	heredoc;
+	char	*heredoc_EOF;
 }   t_pipex;
+	
 
 #endif
