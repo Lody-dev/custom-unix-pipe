@@ -210,8 +210,7 @@ void child_process(t_pipex *px, int argc)
 pid_t start_pipex(t_pipex *px, int argc)
 {
 	pid_t pid;
-	int sig;
-		
+	int sig;	
 	pid = fork();
 	if (pid == 0) //child
 		child_process(px, argc);
@@ -220,8 +219,10 @@ pid_t start_pipex(t_pipex *px, int argc)
 		close(px->pipes[px->cmd_index][1]);
 		close(px->prev_read_fd);
 		px->prev_read_fd = px->pipes[px->cmd_index][0];
+		if(px->cmd_index == argc - 4 - px->heredoc)
+			close(px->pipes[px->cmd_index][0]);
 		waitpid(pid, &sig, 0);
-		printf("%d\n", sig % 255);
+		//printf("%d\n", sig % 255);
 	}
 	return(pid);
 }
@@ -236,10 +237,9 @@ void heredoc(t_pipex *px)
 		line = get_next_line(0);
 	//	if (!line || !*line)
 	//		break;
-		ft_printf("%s\n", line);
-		ft_putstr_fd(line,px->infile_fd);
 		if(ft_strncmp(line, px->heredoc_EOF, ft_strlen(line)-1) == 0)
 			break;
+		ft_putstr_fd(line,px->infile_fd);
 		free(line);
 	}
 	free(line);
@@ -247,7 +247,7 @@ void heredoc(t_pipex *px)
 
 void heredoc_check(t_pipex *px,char **argv)
 {
-	if(ft_strncmp("here_doc", argv[1], sizeof(argv[1])) == 0)
+	if(ft_strncmp("here_doc", argv[1], ft_strlen(argv[1])) == 0)
 	{
 		px->heredoc = 1;
 		px->heredoc_EOF = argv[2];
@@ -279,6 +279,14 @@ int main(int argc, char **argv, char **envp)
 		px.cmd_index++;
 	}
 	cleanup(&px);
+	close(px.infile_fd);
+	close(px.outfile_fd);
 	ft_printf("Parent process finished\n");
-	return (0);
+	close(2);
+	close(1);
+	if(px.heredoc == 1)
+	{
+		get_next_line(-1);
+		unlink(".heredoc");
+	}
 }
