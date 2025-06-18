@@ -235,8 +235,8 @@ void heredoc(t_pipex *px)
 	while (1)
 	{
 		line = get_next_line(0);
-	//	if (!line || !*line)
-	//		break;
+		if (!line || !*line)
+			break;
 		if(ft_strncmp(line, px->heredoc_EOF, ft_strlen(line)-1) == 0)
 			break;
 		ft_putstr_fd(line,px->infile_fd);
@@ -279,9 +279,9 @@ int main(int argc, char **argv, char **envp)
 		px.cmd_index++;
 	}
 	cleanup(&px);
+
 	close(px.infile_fd);
 	close(px.outfile_fd);
-	ft_printf("Parent process finished\n");
 	close(2);
 	close(1);
 	if(px.heredoc == 1)
