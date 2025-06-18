@@ -210,7 +210,7 @@ void child_process(t_pipex *px, int argc)
 pid_t start_pipex(t_pipex *px, int argc)
 {
 	pid_t pid;
-	int sig;	
+//	int sig;	
 	pid = fork();
 	if (pid == 0) //child
 		child_process(px, argc);
@@ -221,7 +221,7 @@ pid_t start_pipex(t_pipex *px, int argc)
 		px->prev_read_fd = px->pipes[px->cmd_index][0];
 		if(px->cmd_index == argc - 4 - px->heredoc)
 			close(px->pipes[px->cmd_index][0]);
-		waitpid(pid, &sig, 0);
+	        //waitpid(pid, &sig, 0);
 		//printf("%d\n", sig % 255);
 	}
 	return(pid);
@@ -278,6 +278,8 @@ int main(int argc, char **argv, char **envp)
 		start_pipex(&px, argc);
 		px.cmd_index++;
 	}
+	while (wait(NULL) > 0)
+    		;
 	cleanup(&px);
 
 	close(px.infile_fd);
