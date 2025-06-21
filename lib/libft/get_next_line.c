@@ -6,7 +6,7 @@
 /*   By: viaremko <lodyiaremko@proton.me>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/30 20:29:32 by viaremko          #+#    #+#             */
-/*   Updated: 2024/12/10 19:14:03 by viaremko         ###   ########.fr       */
+/*   Updated: 2025/06/21 15:19:21 by viaremko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ char	*get_next_line(int fd)
 
 	if (fd < 0 || fd > MAX_FD || BUFFER_SIZE <= 0)
 	{
-		if(buffer)
+		if (buffer)
 			free(buffer);
 		return (NULL);
 	}

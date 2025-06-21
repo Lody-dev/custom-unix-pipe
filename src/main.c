@@ -271,10 +271,10 @@ void heredoc(t_pipex *px)
 
 void heredoc_check(t_pipex *px,char **argv, int argc)
 {
-	if(argc == 5)
-		ft_error(9898, "Not enough arguments for piping\n");
 	if(ft_strncmp("here_doc", argv[1], ft_strlen(argv[1])) == 0)
 	{
+		if(argc == 5)
+			ft_error(9898, "Not enough arguments for piping\n");
 		px->heredoc = 1;
 		px->heredoc_EOF = argv[2];
 		heredoc(px);
