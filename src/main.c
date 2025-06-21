@@ -1,5 +1,13 @@
 #include "../lib/pipex.h"
 
+void clean_heredoc(int heredoc_status)
+{
+	if(heredoc_status == 1)
+	{
+		get_next_line(-1);
+		unlink(".heredoc");
+	}
+}
 void cleanup(t_pipex *px)
 {
 	int i;
@@ -26,6 +34,7 @@ void cleanup(t_pipex *px)
 	free(px->pipes);
 	free(px->paths);
 	free(px->commands);
+	clean_heredoc(px->heredoc);
 }
 
 void pipe_cleaner(t_pipex *px, int argc)
@@ -260,8 +269,10 @@ void heredoc(t_pipex *px)
 	free(line);
 }
 
-void heredoc_check(t_pipex *px,char **argv)
+void heredoc_check(t_pipex *px,char **argv, int argc)
 {
+	if(argc == 5)
+		ft_error(9898, "Not enough arguments for piping\n");
 	if(ft_strncmp("here_doc", argv[1], ft_strlen(argv[1])) == 0)
 	{
 		px->heredoc = 1;
@@ -278,7 +289,7 @@ int main(int argc, char **argv, char **envp)
 	if (argc < 5)
 		ft_error(1, "Not enough arguments\nUsage: ./pipex file1 cmd1 cmd2 file2\n");
 	null_command_check(argc, argv);
-	heredoc_check(&px, argv);
+	heredoc_check(&px, argv, argc);
 	px.candidates = find_candidate(envp);
 	open_IO_files(&px, &px.infile_fd, &px.outfile_fd, argc, argv);
 	px.commands = create_commands_array(&px, argv, argc);
@@ -301,9 +312,4 @@ int main(int argc, char **argv, char **envp)
 
 	close(2);
 	close(1);
-	if(px.heredoc == 1)
-	{
-		get_next_line(-1);
-		unlink(".heredoc");
-	}
 }
