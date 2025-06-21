@@ -28,6 +28,19 @@ void cleanup(t_pipex *px)
 	free(px->commands);
 }
 
+void pipe_cleaner(t_pipex *px, int argc)
+{
+	int i;
+	
+	i = -1;
+	while(++i < argc - 3 - px->heredoc)
+	{
+		close(px->pipes[i][0]);
+		close(px->pipes[i][1]);
+	}
+	close(px->infile_fd);
+	close(px->outfile_fd);
+}
 void ft_error(int exit_code, char *msg)
 {
 	ft_putstr_fd(msg, 2);
@@ -155,6 +168,7 @@ void path_check(t_pipex *px, int argc)
 	}
 	if (null_counter != 0)
 	{
+		pipe_cleaner(px, argc);
 		cleanup(px);
 		ft_error(4, "Error: command not found\n");
 	}
@@ -203,6 +217,7 @@ void child_process(t_pipex *px, int argc)
 	else
 		dup2(px->pipes[px->cmd_index][1], STDOUT_FILENO);
 	execve(px->paths[px->cmd_index],px->commands[px->cmd_index],px->envp);
+	pipe_cleaner(px, argc);
 	cleanup(px);
 	ft_error(126, "Child process falied\n");
 }
@@ -266,9 +281,9 @@ int main(int argc, char **argv, char **envp)
 	heredoc_check(&px, argv);
 	px.candidates = find_candidate(envp);
 	open_IO_files(&px, &px.infile_fd, &px.outfile_fd, argc, argv);
-	open_pipes(&px, &px.pipes, argc);
 	px.commands = create_commands_array(&px, argv, argc);
 	px.paths = get_paths_array(&px, px.candidates, px.commands, argc);
+	open_pipes(&px, &px.pipes, argc);
 	path_check(&px, argc);
 	px.envp = envp;	
 	px.cmd_index = 0;
@@ -280,10 +295,10 @@ int main(int argc, char **argv, char **envp)
 	}
 	while (wait(NULL) > 0)
     		;
-	cleanup(&px);
-
 	close(px.infile_fd);
 	close(px.outfile_fd);
+	cleanup(&px);
+
 	close(2);
 	close(1);
 	if(px.heredoc == 1)
