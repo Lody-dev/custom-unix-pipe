@@ -6,7 +6,7 @@
 /*   By: viaremko <lodyiaremko@proton.me>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/06 18:46:43 by viaremko          #+#    #+#             */
-/*   Updated: 2025/06/22 19:18:59 by viaremko         ###   ########.fr       */
+/*   Updated: 2025/06/22 16:51:01 by viaremko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../lib/pipex.h"
@@ -21,10 +21,11 @@ int	main(int argc, char **argv, char **envp)
 {
 	static t_pipex	px;
 
-	if (argc != 5)
+	if (argc < 5)
 		ft_error(1,
 			"Not enough arguments\nUsage: ./pipex file1 cmd1 cmd2 file2\n");
 	null_command_check(argc, argv);
+	heredoc_check(&px, argv, argc);
 	open_io_files(&px, argc, argv);
 	px.candidates = find_candidate(envp);
 	px.commands = create_commands_array(&px, argv, argc);
