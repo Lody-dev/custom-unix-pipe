@@ -1,39 +1,59 @@
-NAME    := custom-unix-pipe
-CFLAGS  := -Wall -Wextra -Werror -g
-LIBFT   := ./lib/libft
+# --- Project Name ---
+NAME    = custom-unix-pipe
 
-HEADERS := -I $(LIBFT)
-LIBS    := $(LIBFT)/libft.a 
+# --- Compiler & Flags ---
+CC      = gcc
+CFLAGS  = -Wall -Wextra -Werror -Iincludes -I$(LIBFT_DIR)
 
-SRCS    := $(shell find ./src -name "*.c")
-OBJS    := $(SRCS:.c=.o)
+# --- Directories ---
+SRC_DIR = src
+OBJ_DIR = obj
+LIBFT_DIR = lib/libft
 
-.PHONY: all libft clean fclean re
+# --- Files ---
+SRC     = $(wildcard $(SRC_DIR)/*.c)
+OBJ     = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+HEADER  = $(wildcard includes/*.h)
 
-all: libft $(NAME)
-	@echo "🚀 Build complete: $(NAME)"
+# --- Libft ---
+LIBFT   = $(LIBFT_DIR)/libft.a
 
-libft:
-	@make --no-print-directory -C $(LIBFT) > /dev/null 2>&1
-	@echo "📚 libft compiled"
+# --- Default Target ---
+all: $(LIBFT) $(NAME)
 
-%.o: %.c
-	@echo "⚙️ Compiling: $<"
-	@cc $(CFLAGS) -c $< -o $@ $(HEADERS)
+# --- Build main executable ---
+$(NAME): $(OBJ)
+	@echo "🔧 Linking $(NAME)..."
+	@$(CC) $(CFLAGS) $(OBJ) $(LIBFT) -o $(NAME)
+	@echo "✅ Build complete!"
 
-$(NAME): $(OBJS)
-	@echo "🔗 Linking: $(NAME)"
-	@cc $(OBJS) $(LIBS) -o $(NAME) $(HEADERS)
-	@echo "✅ Executable created: $(NAME)"
+# --- Compile each .c to .o ---
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(HEADER) | $(OBJ_DIR)
+	@echo "🧩 Compiling $<..."
+	@$(CC) $(CFLAGS) -c $< -o $@
 
+# --- Ensure obj/ folder exists ---
+$(OBJ_DIR):
+	@mkdir -p $(OBJ_DIR)
+
+# --- Build libft first ---
+$(LIBFT):
+	@echo "📚 Building libft..."
+	@make --no-print-directory -C $(LIBFT_DIR)
+
+# --- Clean object files ---
 clean:
-	@make --no-print-directory clean -C $(LIBFT)
-	@rm -f $(LIBFT)/*.a
-	@rm -f $(OBJS) $(OBJS_BONUS)
-	@echo "🧹 Cleaned object files and libraries"
+	@echo "🧹 Removing object files..."
+	@rm -rf $(OBJ_DIR)
+	@make --no-print-directory -C $(LIBFT_DIR) clean
 
+# --- Full cleanup ---
 fclean: clean
-	@rm -f $(NAME) $(NAME_BONUS)
-	@echo "🗑️ Executable removed"
+	@echo "🗑️  Removing executable and libft..."
+	@rm -f $(NAME)
+	@make --no-print-directory -C $(LIBFT_DIR) fclean
 
+# --- Rebuild everything ---
 re: fclean all
+
+.PHONY: all clean fclean re

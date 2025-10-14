@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 #ifndef PIPEX_H
 # define PIPEX_H
-# include "../lib/libft/libft.h"
+# include "../lib/libft/src/libft.h"
 # include <errno.h>
 # include <fcntl.h>
 # include <stdio.h>
